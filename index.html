@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>টিম কাজের খাতা</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f6;--card:#fff;--ink:#1d2433;--mute:#667085;--line:#dde2ec;--pri:#2f4ea2;--pri-ink:#fff;--acc:#e8a317;--ok:#1f8a5b;--warn:#b86e00;--plan:#667085}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#12161f;--card:#1b2130;--ink:#e8ecf4;--mute:#9aa4b8;--line:#2c3447;--pri:#7e9bf0;--pri-ink:#101523;--acc:#f0b94a;--ok:#4fc08d;--warn:#f0b94a;--plan:#9aa4b8}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Hind Siliguri","Noto Sans Bengali","Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;font-size:16px}
+header{background:var(--pri);color:var(--pri-ink);padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+header h1{font-size:1.25rem;margin:0;font-weight:700}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:transparent;border:0;color:inherit;font:inherit;padding:6px 14px;border-radius:8px;cursor:pointer;opacity:.8}
+nav button[aria-selected=true]{background:rgba(255,255,255,.2);opacity:1;font-weight:600}
+main{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+section[hidden]{display:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+h2{font-size:1.1rem;margin:0 0 12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+label{display:flex;flex-direction:column;font-size:.85rem;color:var(--mute);gap:3px;flex:1 1 150px}
+label.wide{flex:2 1 260px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{resize:vertical;min-height:60px}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btn{font:inherit;background:var(--pri);color:var(--pri-ink);border:0;border-radius:8px;padding:9px 18px;cursor:pointer;font-weight:600}
+.btn.ghost{background:transparent;color:var(--pri);border:1px solid var(--line)}
+.btn.small{padding:4px 10px;font-size:.85rem}
+.del{background:none;border:0;color:var(--mute);cursor:pointer;font:inherit;padding:2px 6px}
+.del:hover{color:#c0392b}
+.member{border-left:4px solid var(--pri);padding-left:12px;margin:18px 0 8px}
+.member b{font-size:1.02rem}.member small{color:var(--mute);margin-left:6px}
+.task{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:10px 0;border-top:1px solid var(--line)}
+.task .t{font-weight:600}.task .n{color:var(--mute);font-size:.92rem;grid-column:1/-1;white-space:pre-wrap}
+.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem;color:var(--mute)}
+.chip{border-radius:99px;padding:1px 10px;font-size:.8rem;background:var(--bg);border:1px solid var(--line)}
+select.st{width:auto;padding:3px 8px;font-size:.85rem;font-weight:600}
+.st.s-done{color:var(--ok)}.st.s-doing{color:var(--warn)}.st.s-plan{color:var(--plan)}
+.rt{display:flex;align-items:center;gap:10px;padding:6px 0}
+.rt input{width:auto;accent-color:var(--ok);transform:scale(1.2)}
+.rt.d span{text-decoration:line-through;color:var(--mute)}
+.empty{color:var(--mute);padding:10px 0}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:500}
+.scroll{overflow-x:auto}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.stat{flex:1 1 120px;background:var(--bg);border-radius:10px;padding:10px 14px}
+.stat b{display:block;font-size:1.4rem}.stat span{color:var(--mute);font-size:.85rem}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 18px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.on{opacity:1}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>টিম কাজের খাতা</h1>
+  <nav role="tablist" id="tabs">
+    <button role="tab" data-tab="today" aria-selected="true">দৈনিক কাজ</button>
+    <button role="tab" data-tab="routine" aria-selected="false">নিয়মিত কাজ</button>
+    <button role="tab" data-tab="report" aria-selected="false">রিপোর্ট</button>
+    <button role="tab" data-tab="team" aria-selected="false">টিম</button>
+  </nav>
+</header>
+<main>
+
+<section id="tab-today">
+  <div class="card">
+    <h2>নতুন কাজ যোগ করুন</h2>
+    <div class="row">
+      <label>তারিখ<input type="date" id="f-date"></label>
+      <label>সদস্য<select id="f-member"></select></label>
+      <label>ধরন<select id="f-type"><option>ডিজাইন</option><option>সোশ্যাল মিডিয়া</option><option>বিজ্ঞাপন (Ads)</option><option>কনটেন্ট</option><option>SEO</option><option>ইমেইল মার্কেটিং</option><option>রিপোর্টিং</option><option>মিটিং</option><option>অন্যান্য</option></select></label>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <label class="wide">কাজের শিরোনাম<input id="f-title" placeholder="যেমন: ফেসবুক ক্যাম্পেইনের ব্যানার ডিজাইন"></label>
+      <label>অবস্থা<select id="f-status"><option value="plan">পরিকল্পিত</option><option value="doing">চলমান</option><option value="done">সম্পন্ন</option></select></label>
+      <label>সময় (ঘণ্টা)<input type="number" id="f-hours" min="0" step="0.25" placeholder="০"></label>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <label class="wide">নোট / আপডেট<textarea id="f-note" placeholder="কাজের অগ্রগতি, লিংক বা সমস্যা লিখুন"></textarea></label>
+      <button class="btn" id="add-task">কাজ যোগ করুন</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="row" style="margin-bottom:6px">
+      <label>দেখার তারিখ<input type="date" id="v-date"></label>
+      <label>সদস্য<select id="v-member"></select></label>
+      <button class="btn ghost small" id="v-today">আজ</button>
+    </div>
+    <div id="today-list"></div>
+  </div>
+</section>
+
+<section id="tab-routine" hidden>
+  <div class="card">
+    <h2>নিয়মিত কাজ যোগ করুন</h2>
+    <div class="row">
+      <label>সদস্য<select id="r-member"></select></label>
+      <label class="wide">কাজ<input id="r-title" placeholder="যেমন: Ads অ্যাকাউন্টের বাজেট চেক"></label>
+      <label>কতদিন পর পর<select id="r-freq"><option value="daily">প্রতিদিন</option><option value="weekly">সাপ্তাহিক</option></select></label>
+      <label id="r-day-wrap" hidden>বার<select id="r-day"></select></label>
+      <button class="btn" id="add-routine">যোগ করুন</button>
+    </div>
+    <p style="color:var(--mute);font-size:.9rem;margin:10px 0 0">এই কাজগুলো "দৈনিক কাজ" পাতায় প্রতিদিন চেকলিস্ট হিসেবে দেখাবে।</p>
+  </div>
+  <div class="card"><div id="routine-list"></div></div>
+</section>
+
+<section id="tab-report" hidden>
+  <div class="card">
+    <div class="row">
+      <label>শুরুর তারিখ<input type="date" id="p-from"></label>
+      <label>শেষ তারিখ<input type="date" id="p-to"></label>
+      <label>সদস্য<select id="p-member"></select></label>
+      <button class="btn" id="p-csv">CSV ডাউনলোড</button>
+    </div>
+  </div>
+  <div class="card" id="report-box"></div>
+</section>
+
+<section id="tab-team" hidden>
+  <div class="card">
+    <h2>সদস্য যোগ করুন</h2>
+    <div class="row">
+      <label class="wide">নাম<input id="m-name" placeholder="সদস্যের নাম"></label>
+      <label>ভূমিকা<select id="m-role"><option>ডিজাইনার</option><option>ডিজিটাল মার্কেটার</option></select></label>
+      <button class="btn" id="add-member">যোগ করুন</button>
+    </div>
+    <div id="member-list" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h2>ব্যাকআপ</h2>
+    <p style="color:var(--mute);margin-top:0">তথ্য এই ব্রাউজারেই জমা থাকে। নিয়মিত ব্যাকআপ নিন এবং অন্য কম্পিউটারে বা সহকর্মীর সঙ্গে শেয়ার করতে ফাইলটি ইমপোর্ট করুন।</p>
+    <div class="row">
+      <button class="btn ghost" id="b-export">ব্যাকআপ ডাউনলোড</button>
+      <label style="flex:0 1 auto"><input type="file" id="b-import" accept=".json"></label>
+    </div>
+  </div>
+</section>
+
+</main>
+<div id="toast"></div>
+
+<script>
+const KEY='team-work-log-v1';
+const DAYS=['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
+const ST={plan:'পরিকল্পিত',doing:'চলমান',done:'সম্পন্ন'};
+let S=load();
+const $=id=>document.getElementById(id);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const bn=n=>String(n).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const today=()=>iso(new Date());
+const fmtDate=d=>bn(new Date(d+'T00:00:00').toLocaleDateString('en-GB'))+' ('+DAYS[new Date(d+'T00:00:00').getDay()]+')';
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.members)return s}catch(e){}return{members:[],logs:[],routines:[],done:{}}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('সংরক্ষণ করা যায়নি')}}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)}
+const mem=id=>S.members.find(m=>m.id===id);
+
+/* tabs */
+$('tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  ['today','routine','report','team'].forEach(t=>$('tab-'+t).hidden=t!==b.dataset.tab);
+  renderAll()};
+
+/* selects */
+function fillMembers(){
+  const opts=S.members.map(m=>`<option value="${m.id}">${esc(m.name)} (${esc(m.role)})</option>`).join('');
+  const none='<option value="">আগে টিম পাতায় সদস্য যোগ করুন</option>';
+  ['f-member','r-member'].forEach(id=>{const v=$(id).value;$(id).innerHTML=opts||none;if(v)$(id).value=v});
+  ['v-member','p-member'].forEach(id=>{const v=$(id).value;$(id).innerHTML='<option value="">সবাই</option>'+opts;$(id).value=v});
+}
+$('r-day').innerHTML=DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join('');
+$('r-freq').onchange=()=>$('r-day-wrap').hidden=$('r-freq').value!=='weekly';
+
+/* today tab */
+$('add-task').onclick=()=>{
+  const title=$('f-title').value.trim(),m=$('f-member').value,d=$('f-date').value;
+  if(!m)return toast('আগে একজন সদস্য যোগ করুন');
+  if(!title||!d)return toast('তারিখ ও কাজের শিরোনাম দিন');
+  S.logs.push({id:uid(),date:d,memberId:m,title,type:$('f-type').value,status:$('f-status').value,hours:parseFloat($('f-hours').value)||0,note:$('f-note').value.trim()});
+  save();['f-title','f-hours','f-note'].forEach(i=>$(i).value='');
+  $('v-date').value=d;toast('কাজ যোগ হয়েছে');renderToday()};
+$('v-today').onclick=()=>{$('v-date').value=today();renderToday()};
+$('v-date').onchange=$('v-member').onchange=renderToday;
+
+function routinesFor(d,mid){
+  const wd=new Date(d+'T00:00:00').getDay();
+  return S.routines.filter(r=>(!mid||r.memberId===mid)&&(r.freq==='daily'||+r.day===wd));
+}
+function renderToday(){
+  const d=$('v-date').value||today(),mid=$('v-member').value;
+  const ms=S.members.filter(m=>!mid||m.id===mid);
+  if(!S.members.length){$('today-list').innerHTML='<p class="empty">এখনো কোনো সদস্য নেই। "টিম" পাতায় গিয়ে ডিজাইনার ও মার্কেটারদের যোগ করুন।</p>';return}
+  let h=`<h2>${fmtDate(d)}</h2>`;
+  ms.forEach(m=>{
+    const logs=S.logs.filter(l=>l.date===d&&l.memberId===m.id);
+    const rts=routinesFor(d,m.id);
+    const hrs=logs.reduce((a,l)=>a+l.hours,0);
+    h+=`<div class="member"><b>${esc(m.name)}</b><small>${esc(m.role)} · ${bn(logs.length)}টি কাজ · ${bn(hrs)} ঘণ্টা</small></div>`;
+    h+=rts.map(r=>{const k=r.id+'|'+d,on=S.done[k];return `<label class="rt ${on?'d':''}" style="flex-direction:row;color:var(--ink);font-size:1rem"><input type="checkbox" data-rt="${k}" ${on?'checked':''}><span>${esc(r.title)}</span><span class="chip">${r.freq==='daily'?'নিয়মিত':'সাপ্তাহিক'}</span></label>`}).join('');
+    h+=logs.map(l=>`<div class="task"><div><div class="t">${esc(l.title)}</div><div class="meta"><span class="chip">${esc(l.type)}</span>${l.hours?`<span>${bn(l.hours)} ঘণ্টা</span>`:''}</div></div>
+      <div><select class="st s-${l.status}" data-st="${l.id}">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${k===l.status?'selected':''}>${v}</option>`).join('')}</select><button class="del" data-dl="${l.id}" aria-label="মুছুন">✕</button></div>
+      ${l.note?`<div class="n">${esc(l.note)}</div>`:''}</div>`).join('');
+    if(!logs.length&&!rts.length)h+='<p class="empty">এই দিনে কোনো কাজ লেখা হয়নি।</p>';
+  });
+  $('today-list').innerHTML=h;
+}
+$('today-list').onclick=e=>{
+  const dl=e.target.closest('[data-dl]');
+  if(dl&&confirm('কাজটি মুছে ফেলবেন?')){S.logs=S.logs.filter(l=>l.id!==dl.dataset.dl);save();renderToday()}};
+$('today-list').onchange=e=>{
+  const t=e.target;
+  if(t.dataset.st){S.logs.find(l=>l.id===t.dataset.st).status=t.value;save();renderToday()}
+  if(t.dataset.rt){t.checked?S.done[t.dataset.rt]=1:delete S.done[t.dataset.rt];save();renderToday()}};
+
+/* routines */
+$('add-routine').onclick=()=>{
+  const title=$('r-title').value.trim(),m=$('r-member').value;
+  if(!m||!title)return toast('সদস্য ও কাজের নাম দিন');
+  S.routines.push({id:uid(),memberId:m,title,freq:$('r-freq').value,day:+$('r-day').value});
+  save();$('r-title').value='';toast('নিয়মিত কাজ যোগ হয়েছে');renderRoutines()};
+function renderRoutines(){
+  if(!S.routines.length){$('routine-list').innerHTML='<p class="empty">কোনো নিয়মিত কাজ নেই। উপরের ফর্ম থেকে যোগ করুন।</p>';return}
+  $('routine-list').innerHTML='<div class="scroll"><table><tr><th>সদস্য</th><th>কাজ</th><th>কখন</th><th></th></tr>'+S.routines.map(r=>`<tr><td>${esc(mem(r.memberId)?.name||'—')}</td><td>${esc(r.title)}</td><td>${r.freq==='daily'?'প্রতিদিন':'প্রতি '+DAYS[r.day]}</td><td><button class="del" data-dr="${r.id}" aria-label="মুছুন">✕</button></td></tr>`).join('')+'</table></div>'}
+$('routine-list').onclick=e=>{const b=e.target.closest('[data-dr]');
+  if(b&&confirm('নিয়মিত কাজটি মুছে ফেলবেন?')){S.routines=S.routines.filter(r=>r.id!==b.dataset.dr);save();renderRoutines()}};
+
+/* report */
+function reportData(){
+  const f=$('p-from').value,t=$('p-to').value,mid=$('p-member').value;
+  return S.logs.filter(l=>(!f||l.date>=f)&&(!t||l.date<=t)&&(!mid||l.memberId===mid)).sort((a,b)=>b.date.localeCompare(a.date));
+}
+function renderReport(){
+  const L=reportData();
+  const done=L.filter(l=>l.status==='done').length,hrs=L.reduce((a,l)=>a+l.hours,0);
+  let h=`<div class="stats"><div class="stat"><b>${bn(L.length)}</b><span>মোট কাজ</span></div><div class="stat"><b>${bn(done)}</b><span>সম্পন্ন</span></div><div class="stat"><b>${bn(hrs)}</b><span>মোট ঘণ্টা</span></div></div>`;
+  if(!L.length){$('report-box').innerHTML=h+'<p class="empty">এই সময়ে কোনো কাজ পাওয়া যায়নি।</p>';return}
+  const by={};L.forEach(l=>{(by[l.memberId]??={n:0,d:0,h:0});by[l.memberId].n++;by[l.memberId].d+=l.status==='done';by[l.memberId].h+=l.hours});
+  h+='<div class="scroll"><table><tr><th>সদস্য</th><th>কাজ</th><th>সম্পন্ন</th><th>ঘণ্টা</th></tr>'+Object.entries(by).map(([id,v])=>`<tr><td>${esc(mem(id)?.name||'—')}</td><td>${bn(v.n)}</td><td>${bn(v.d)}</td><td>${bn(v.h)}</td></tr>`).join('')+'</table></div>';
+  h+='<h2 style="margin-top:20px">বিস্তারিত</h2><div class="scroll"><table><tr><th>তারিখ</th><th>সদস্য</th><th>কাজ</th><th>অবস্থা</th><th>নোট</th></tr>'+L.map(l=>`<tr><td>${bn(l.date)}</td><td>${esc(mem(l.memberId)?.name||'—')}</td><td>${esc(l.title)}<br><span class="chip">${esc(l.type)}</span></td><td>${ST[l.status]}</td><td>${esc(l.note)}</td></tr>`).join('')+'</table></div>';
+  $('report-box').innerHTML=h}
+['p-from','p-to','p-member'].forEach(i=>$(i).onchange=renderReport);
+function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+$('p-csv').onclick=()=>{
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const rows=[['তারিখ','সদস্য','ভূমিকা','কাজ','ধরন','অবস্থা','ঘণ্টা','নোট']].concat(reportData().map(l=>{const m=mem(l.memberId)||{};return[l.date,m.name,m.role,l.title,l.type,ST[l.status],l.hours,l.note]}));
+  download('work-report.csv','\ufeff'+rows.map(r=>r.map(q).join(',')).join('\n'),'text/csv')};
+
+/* team */
+$('add-member').onclick=()=>{
+  const n=$('m-name').value.trim();if(!n)return toast('নাম লিখুন');
+  S.members.push({id:uid(),name:n,role:$('m-role').value});save();$('m-name').value='';renderAll();toast('সদস্য যোগ হয়েছে')};
+function renderTeam(){
+  $('member-list').innerHTML=S.members.length?'<table>'+S.members.map(m=>`<tr><td>${esc(m.name)}</td><td>${esc(m.role)}</td><td style="text-align:right"><button class="del" data-dm="${m.id}" aria-label="মুছুন">✕</button></td></tr>`).join('')+'</table>':'<p class="empty">এখনো কোনো সদস্য নেই।</p>'}
+$('member-list').onclick=e=>{const b=e.target.closest('[data-dm]');if(!b)return;
+  if(confirm('সদস্য ও তাঁর সব কাজের তথ্য মুছে যাবে। চালিয়ে যাবেন?')){const id=b.dataset.dm;
+    S.members=S.members.filter(m=>m.id!==id);S.logs=S.logs.filter(l=>l.memberId!==id);S.routines=S.routines.filter(r=>r.memberId!==id);save();renderAll()}};
+$('b-export').onclick=()=>download('team-work-backup-'+today()+'.json',JSON.stringify(S),'application/json');
+$('b-import').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.members)throw 0;
+    if(confirm('বর্তমান তথ্য বদলে ব্যাকআপের তথ্য বসবে। চালিয়ে যাবেন?')){S={members:d.members||[],logs:d.logs||[],routines:d.routines||[],done:d.done||{}};save();renderAll();toast('ইমপোর্ট সম্পন্ন')}}
+    catch(x){toast('ফাইলটি সঠিক নয়')}e.target.value=''};r.readAsText(f)};
+
+function renderAll(){fillMembers();renderToday();renderRoutines();renderReport();renderTeam()}
+$('f-date').value=$('v-date').value=today();
+$('p-from').value=iso(new Date(Date.now()-6*864e5));$('p-to').value=today();
+renderAll();
+</script>
+</body>
+</html>
